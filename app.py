@@ -296,8 +296,6 @@ if generate_btn:
             )
 
 # ── Footer ────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div style="text-align:center; color:#4A4A6A; font-size:.8rem; margin-top:3rem; padding-bottom:1rem;">
-    صُنع بـ ❤️ للتجار المغاربة · مدعوم بـ Gemini AI
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="output-card"><div class="output-badge">✅ تم توليد الإعلان بنجاح</div><hr class="divider">', unsafe_allow_html=True)
+st.markdown(result_text)
+st.markdown('</div>', unsafe_allow_html=True)
