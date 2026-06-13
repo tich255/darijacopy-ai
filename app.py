@@ -1,19 +1,19 @@
 import streamlit as st
 from google import genai
 
-# ── Page Config ───────────────────────────────────────────────────────────────
+# ── Page Config ───────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="DarijaCopy AI",
     page_icon="🚀",
     layout="centered",
 )
 
-# ── API Client ────────────────────────────────────────────────────────────────
+# ── API Client ────────────────────────────────────────────────────────────
 API_KEY = st.secrets["GEMINI_API_KEY"]
 MODEL   = "gemini-2.5-flash"
 client  = genai.Client(api_key=API_KEY)
 
-# ── Master CSS ────────────────────────────────────────────────────────────────
+# ── Master CSS ────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
@@ -356,23 +356,6 @@ label {
 .copy-btn:hover { border-color: var(--violet); color: var(--violet-g); }
 
 /* ════════════════════════════════
-   WARNING BANNER
-════════════════════════════════ */
-.warn-card {
-  background: rgba(245,158,11,.07);
-  border: 1.5px solid rgba(245,158,11,.3);
-  border-radius: 14px;
-  padding: 1.1rem 1.4rem;
-  margin-top: 2rem;
-  color: #FCD34D;
-  font-size: .9rem;
-  direction: rtl;
-  text-align: right;
-  line-height: 1.75;
-}
-.warn-card strong { color: #FDE68A; }
-
-/* ════════════════════════════════
    ERROR
 ════════════════════════════════ */
 .err-card {
@@ -417,7 +400,7 @@ label {
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="hero-wrap">
-  <div class="hero-badge">🇲🇦 &nbsp; Powered by Gemini AI</div>
+  <div class="hero-badge">🇲🇦 &nbsp; Powered by Advanced AI</div>
   <div class="hero-title">🚀 DarijaCopy AI</div>
   <p class="hero-sub">
     مُساعد الإعلانات الذكي بالدارجة المغربية<br>
@@ -425,7 +408,7 @@ st.markdown("""
     احترافية تبيع وتجذب الزبون ف ثوانٍ ✨
   </p>
   <div class="hero-stats">
-    <div class="stat-pill">⚡<span>Gemini 2.5 Flash</span></div>
+    <div class="stat-pill">⚡<span>محرك متقدم</span></div>
     <div class="stat-pill">🎯<span>دارجة مغربية 100%</span></div>
     <div class="stat-pill">✍️<span>2 أساليب إعلانية</span></div>
   </div>
@@ -500,7 +483,7 @@ if generate:
 
 ═══ الشروط الإلزامية للصياغة ═══
 
-【 إعلان 1 — أسلوب Problem → Solution 】
+【 إعلان 1 — أ��لوب Problem → Solution 】
 - ابدأ بمشكلة حقيقية يعيشها الزبون المغربي يومياً تخص هذا المنتج
 - أظهر كيف المنتج يحل هاد المشكلة بشكل ملموس وسريع
 - الأسلوب: حماسي، مباشر، ومقنع
@@ -533,7 +516,7 @@ if generate:
 
         import time
         try:
-            with st.spinner("⏳ الذكاء الاصطناعي كيكتب ليك الإعلانات..."):
+            with st.spinner("⏳ كيتولد الإعلانات..."):
                 t0 = time.time()
                 response = client.models.generate_content(
                     model=MODEL,
@@ -588,32 +571,19 @@ if generate:
         except Exception as e:
             err = str(e).lower()
             if "quota" in err or "429" in err or "resource_exhausted" in err:
-                msg = "⛔ <strong>تجاوزنا الحد اليومي ديال الطلبات.</strong><br>جرب مرة أخرى بعد شوية أو استعمل مفتاح API آخر."
+                msg = "⛔ <strong>تجاوزنا الحد اليومي ديال الطلبات.</strong><br>جرب مرة أخرى بعد شوية."
             elif "timeout" in err or "deadline" in err or "unavailable" in err:
                 msg = "⏱️ <strong>الطلب خذ وقت بزاف.</strong><br>شوف الاتصال ديالك وعاود المحاولة."
-            elif "api_key" in err or "401" in err or "403" in err or "invalid" in err:
-                msg = "🔑 <strong>مشكل في مفتاح API.</strong><br>تأكد من إضافة المفتاح في Streamlit Secrets."
             else:
                 msg = f"❌ <strong>خطأ غير متوقع:</strong><br><code>{str(e)[:200]}</code>"
             st.markdown(f'<div class="err-card">{msg}</div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════
-# WARNING BANNER
-# ═══════════════════════════════════════════════════════════════
-st.markdown("""
-<div class="warn-card">
-  💡 <strong>تنبيه مهم:</strong> أي منتج أو موقع يمكن فعله ببساطة فوق الإنترنت غير مربح
-  وليس سوى مضيعة للوقت — الفرص الحقيقية تحتاج جهد، تخطيط، وصبر.
-  استعمل هذه الأداة لمنتجات حقيقية تملكها أو تبيعها بصدق. 🤝
-</div>
-""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
 # FOOTER
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="footer">
-  صُنع بـ ❤️ للتجار المغاربة &nbsp;·&nbsp; مدعوم بـ Gemini 2.5 Flash<br>
+  صُنع بـ ❤️ للتجار المغاربة<br>
   <span style="color:#3A3A58;">DarijaCopy AI v2.0 — جميع الحقوق محفوظة</span>
 </div>
 """, unsafe_allow_html=True)
