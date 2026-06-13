@@ -296,6 +296,17 @@ if generate_btn:
             )
 
 # ── Footer ────────────────────────────────────────────────────────────────────
-st.markdown('<div class="output-card"><div class="output-badge">✅ تم توليد الإعلان بنجاح</div><hr class="divider">', unsafe_allow_html=True)
-st.markdown(result_text)
-st.markdown('</div>', unsafe_allow_html=True)
+try:
+            with st.spinner("الذكاء الاصطناعي كيكتب ليك الإعلان..."):
+                response = client.models.generate_content(
+                    model=MODEL,
+                    contents=prompt,
+                )
+                result_text = response.text
+
+            # الكود الجديد خاصو يكون لداخل هنايا ديريكت تحت الـ try وبنفس المسافة البادئة
+            st.markdown('<div class="output-card"><div class="output-badge">✅ تم توليد الإعلان بنجاح</div><hr class="divider">', unsafe_allow_html=True)
+            st.markdown(result_text)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        except Exception as e:
