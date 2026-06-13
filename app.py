@@ -1,303 +1,619 @@
 import streamlit as st
 from google import genai
 
-# ── Page Config ───────────────────────────────────────────────────────────
+# ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="DarijaCopy AI",
     page_icon="🚀",
     layout="centered",
 )
 
-# ── API Client ────────────────────────────────────────────────────────────
-
+# ── API Client ────────────────────────────────────────────────────────────────
 API_KEY = st.secrets["GEMINI_API_KEY"]
 MODEL   = "gemini-2.5-flash"
+client  = genai.Client(api_key=API_KEY)
 
-client = genai.Client(api_key=API_KEY)
-
-# ── Custom CSS ────────────────────────────────────────────────────────────
+# ── Master CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* ── Google Font ── */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
 
-/* ── Root palette ── */
 :root {
-    --primary:   #6C3FE8;
-    --primary-light: #8B65F0;
-    --accent:    #F5A623;
-    --bg-dark:   #0F0F1A;
-    --bg-card:   #1A1A2E;
-    --bg-input:  #16213E;
-    --border:    #2D2D4E;
-    --text-main: #E8E8F0;
-    --text-muted:#9090B0;
-    --success:   #00D4AA;
+  --ink:        #0B0B14;
+  --surface:    #111120;
+  --card:       #17172A;
+  --card2:      #1E1E35;
+  --rim:        #2A2A45;
+  --rim-bright: #3D3D65;
+  --violet:     #7C5CFC;
+  --violet-g:   #A78BFA;
+  --cyan:       #38BDF8;
+  --gold:       #F59E0B;
+  --emerald:    #10B981;
+  --rose:       #F43F5E;
+  --txt:        #E2E2F0;
+  --muted:      #7070A0;
+  --faint:      #3A3A58;
 }
 
-/* ── Global ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 html, body, [class*="css"] {
-    font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-    background-color: var(--bg-dark) !important;
-    color: var(--text-main) !important;
+  font-family: 'Cairo', system-ui, sans-serif !important;
+  background: var(--ink) !important;
+  color: var(--txt) !important;
 }
 
-/* ── Hide Streamlit chrome ── */
+/* ── Streamlit chrome ── */
 #MainMenu, footer, header { visibility: hidden; }
-.block-container { padding-top: 2rem !important; max-width: 780px !important; }
-
-/* ── Hero banner ── */
-.hero {
-    background: linear-gradient(135deg, #1A0A3E 0%, #0F1A3E 50%, #0A2A1F 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2.5rem 2rem 2rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-}
-.hero::before {
-    content: "";
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(108,63,232,.25) 0%, transparent 70%);
-    pointer-events: none;
-}
-.hero h1 {
-    font-size: 2.4rem;
-    font-weight: 900;
-    background: linear-gradient(90deg, #A78BFA, #60EFFF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 0 0 .6rem;
-}
-.hero p {
-    color: var(--text-muted);
-    font-size: 1.05rem;
-    margin: 0;
-    line-height: 1.7;
+.block-container {
+  padding: 0 1.25rem 4rem !important;
+  max-width: 820px !important;
 }
 
-/* ── Form card ── */
-.form-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 1.5rem;
+/* ════════════════════════════════
+   HERO
+════════════════════════════════ */
+.hero-wrap {
+  position: relative;
+  text-align: center;
+  padding: 3.5rem 2rem 2.8rem;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
 }
-.form-card h3 {
-    color: var(--text-muted);
-    font-size: .85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    margin: 0 0 1.2rem;
+/* animated aurora blobs */
+.hero-wrap::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 20% 10%, rgba(124,92,252,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 45% at 80% 80%, rgba(56,189,248,.12) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(245,158,11,.06) 0%, transparent 60%);
+  animation: aurora 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes aurora {
+  0%   { opacity: .7; transform: scale(1) rotate(0deg); }
+  100% { opacity: 1;  transform: scale(1.08) rotate(2deg); }
+}
+/* grid overlay */
+.hero-wrap::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--faint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--faint) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: .18;
+  pointer-events: none;
 }
 
-/* ── Streamlit input overrides ── */
+.hero-badge {
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: rgba(124,92,252,.12);
+  border: 1px solid rgba(124,92,252,.35);
+  border-radius: 99px;
+  padding: .35rem 1.1rem;
+  font-size: .78rem; font-weight: 700; letter-spacing: .07em;
+  color: var(--violet-g);
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+  position: relative; z-index: 1;
+}
+.hero-title {
+  font-size: clamp(2rem, 5vw, 2.9rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  background: linear-gradient(110deg, #C4B5FD 0%, #67E8F9 50%, #F0ABFC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative; z-index: 1;
+  margin-bottom: .55rem;
+}
+.hero-sub {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.75;
+  position: relative; z-index: 1;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.hero-stats {
+  display: flex; justify-content: center; gap: 1.5rem;
+  margin-top: 1.8rem;
+  position: relative; z-index: 1;
+}
+.stat-pill {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  padding: .5rem 1.1rem;
+  font-size: .82rem; font-weight: 700;
+  color: var(--txt);
+}
+.stat-pill span { color: var(--violet-g); margin-left: .3rem; }
+
+/* ════════════════════════════════
+   SECTION LABEL
+════════════════════════════════ */
+.section-label {
+  display: flex; align-items: center; gap: .6rem;
+  color: var(--muted); font-size: .78rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: .9rem;
+  direction: rtl;
+}
+.section-label::after {
+  content: "";
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--rim) 0%, transparent 100%);
+}
+
+/* ════════════════════════════════
+   INPUT CARD
+════════════════════════════════ */
+.input-card {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: 20px;
+  padding: 1.8rem 1.8rem 1.4rem;
+  margin-bottom: 1.2rem;
+  transition: border-color .25s;
+}
+.input-card:focus-within {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(124,92,252,.1);
+}
+
+/* ── Streamlit widget overrides ── */
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea {
-    background: var(--bg-input) !important;
-    border: 1.5px solid var(--border) !important;
-    border-radius: 10px !important;
-    color: var(--text-main) !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-size: 1rem !important;
-    direction: rtl;
+  background: var(--card2) !important;
+  border: 1.5px solid var(--rim) !important;
+  border-radius: 12px !important;
+  color: var(--txt) !important;
+  font-family: 'Cairo', sans-serif !important;
+  font-size: 1rem !important;
+  direction: rtl !important;
+  padding: .75rem 1rem !important;
+  transition: border-color .2s, box-shadow .2s !important;
 }
 [data-testid="stTextInput"] input:focus,
 [data-testid="stTextArea"] textarea:focus {
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(108,63,232,.18) !important;
+  border-color: var(--violet) !important;
+  box-shadow: 0 0 0 3px rgba(124,92,252,.15) !important;
+  outline: none !important;
 }
-label, .stTextInput label, .stTextArea label {
-    color: var(--text-main) !important;
-    font-weight: 600 !important;
-    font-size: 1rem !important;
-    direction: rtl;
-    text-align: right;
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stTextArea"] textarea::placeholder {
+  color: var(--faint) !important;
+}
+label {
+  color: var(--txt) !important;
+  font-family: 'Cairo', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: .97rem !important;
+  direction: rtl !important;
+  text-align: right !important;
 }
 
-/* ── CTA button ── */
+/* ── Select box ── */
+[data-testid="stSelectbox"] > div > div {
+  background: var(--card2) !important;
+  border: 1.5px solid var(--rim) !important;
+  border-radius: 12px !important;
+  color: var(--txt) !important;
+  font-family: 'Cairo', sans-serif !important;
+}
+
+/* ════════════════════════════════
+   TONE CHIPS  (radio-as-pills)
+════════════════════════════════ */
+[data-testid="stRadio"] > label { display: none !important; }
+[data-testid="stRadio"] > div {
+  display: flex !important; flex-wrap: wrap !important; gap: .55rem !important;
+  direction: rtl !important;
+}
+[data-testid="stRadio"] > div > label {
+  background: var(--card2) !important;
+  border: 1.5px solid var(--rim) !important;
+  border-radius: 99px !important;
+  padding: .42rem 1.1rem !important;
+  font-size: .88rem !important; font-weight: 600 !important;
+  color: var(--muted) !important;
+  cursor: pointer !important;
+  transition: all .18s !important;
+  text-align: center !important;
+  direction: rtl !important;
+}
+[data-testid="stRadio"] > div > label:hover {
+  border-color: var(--violet) !important;
+  color: var(--violet-g) !important;
+}
+[data-testid="stRadio"] > div > label[data-baseweb="radio"] > div:first-child {
+  display: none !important;
+}
+/* selected pill */
+[data-testid="stRadio"] div[data-baseweb="radio"] input:checked + div + div,
+[data-testid="stRadio"] > div > label[aria-checked="true"] {
+  background: rgba(124,92,252,.18) !important;
+  border-color: var(--violet) !important;
+  color: var(--violet-g) !important;
+}
+
+/* ════════════════════════════════
+   GENERATE BUTTON
+════════════════════════════════ */
 [data-testid="stButton"] > button {
-    width: 100% !important;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
-    color: #fff !important;
-    border: none !important;
-    border-radius: 12px !important;
-    padding: 1rem !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-size: 1.25rem !important;
-    font-weight: 700 !important;
-    letter-spacing: .02em !important;
-    cursor: pointer !important;
-    transition: all .25s ease !important;
-    box-shadow: 0 4px 24px rgba(108,63,232,.45) !important;
-    margin-top: .5rem !important;
+  width: 100% !important;
+  background: linear-gradient(135deg, #6B3FFF 0%, #9B72FF 50%, #38BDF8 100%) !important;
+  background-size: 200% 200% !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 1.05rem !important;
+  font-family: 'Cairo', sans-serif !important;
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all .3s ease !important;
+  box-shadow: 0 6px 30px rgba(107,63,255,.4), 0 0 0 0 rgba(107,63,255,0) !important;
+  letter-spacing: .01em !important;
+  margin-top: .6rem !important;
+  animation: btn-breathe 4s ease-in-out infinite !important;
+}
+@keyframes btn-breathe {
+  0%,100% { box-shadow: 0 6px 30px rgba(107,63,255,.4); }
+  50%      { box-shadow: 0 8px 40px rgba(107,63,255,.65); }
 }
 [data-testid="stButton"] > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 30px rgba(108,63,232,.6) !important;
+  transform: translateY(-3px) scale(1.01) !important;
+  box-shadow: 0 12px 40px rgba(107,63,255,.6) !important;
 }
 [data-testid="stButton"] > button:active {
-    transform: translateY(0) !important;
+  transform: translateY(0) scale(.99) !important;
 }
 
-/* ── Output card ── */
-.output-card {
-    background: linear-gradient(135deg, #0A1F12 0%, #0F1A2E 100%);
-    border: 1.5px solid var(--success);
-    border-radius: 16px;
-    padding: 2rem;
-    margin-top: 1.5rem;
-    direction: rtl;
-    text-align: right;
-    line-height: 1.9;
-    font-size: 1.05rem;
-    color: var(--text-main);
-    box-shadow: 0 0 24px rgba(0,212,170,.12);
+/* ════════════════════════════════
+   OUTPUT
+════════════════════════════════ */
+.out-wrap {
+  margin-top: 2rem;
 }
-.output-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    background: rgba(0,212,170,.12);
-    border: 1px solid rgba(0,212,170,.3);
-    border-radius: 99px;
-    padding: .3rem .9rem;
-    font-size: .82rem;
-    font-weight: 700;
-    color: var(--success);
-    margin-bottom: 1.2rem;
+.out-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+  direction: rtl;
+}
+.out-title {
+  font-size: 1rem; font-weight: 800; color: var(--emerald);
+  display: flex; align-items: center; gap: .45rem;
+}
+.out-time {
+  font-size: .75rem; color: var(--muted);
 }
 
-/* ── Error card ── */
-.error-card {
-    background: #1A0A0A;
-    border: 1.5px solid #E53E3E;
-    border-radius: 12px;
-    padding: 1.2rem 1.5rem;
-    margin-top: 1rem;
-    color: #FC8181;
-    font-size: .95rem;
-    direction: rtl;
-    text-align: right;
+.ad-card {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: 18px;
+  padding: 1.8rem 1.8rem 1.5rem;
+  margin-bottom: 1.2rem;
+  direction: rtl;
+  text-align: right;
+  line-height: 2;
+  font-size: 1.02rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .25s;
+}
+.ad-card:hover { border-color: var(--rim-bright); }
+.ad-card::before {
+  content: "";
+  position: absolute; top: 0; right: 0;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,.12) 0%, transparent 70%);
+  transform: translate(30%, -30%);
+}
+.ad-num {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: rgba(124,92,252,.12);
+  border: 1px solid rgba(124,92,252,.25);
+  border-radius: 99px;
+  padding: .28rem .85rem;
+  font-size: .76rem; font-weight: 800; letter-spacing: .06em;
+  color: var(--violet-g);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.ad-body { white-space: pre-wrap; }
+
+/* copy button */
+.copy-row {
+  display: flex; justify-content: flex-start;
+  margin-top: 1.1rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--rim);
+}
+.copy-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--card2);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  padding: .35rem .9rem;
+  font-size: .8rem; font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'Cairo', sans-serif;
+}
+.copy-btn:hover { border-color: var(--violet); color: var(--violet-g); }
+
+/* ════════════════════════════════
+   WARNING BANNER
+════════════════════════════════ */
+.warn-card {
+  background: rgba(245,158,11,.07);
+  border: 1.5px solid rgba(245,158,11,.3);
+  border-radius: 14px;
+  padding: 1.1rem 1.4rem;
+  margin-top: 2rem;
+  color: #FCD34D;
+  font-size: .9rem;
+  direction: rtl;
+  text-align: right;
+  line-height: 1.75;
+}
+.warn-card strong { color: #FDE68A; }
+
+/* ════════════════════════════════
+   ERROR
+════════════════════════════════ */
+.err-card {
+  background: rgba(244,63,94,.07);
+  border: 1.5px solid rgba(244,63,94,.3);
+  border-radius: 14px;
+  padding: 1.1rem 1.4rem;
+  margin-top: 1rem;
+  color: #FDA4AF;
+  font-size: .93rem;
+  direction: rtl; text-align: right;
+  line-height: 1.7;
 }
 
-/* ── Divider ── */
-.divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 1.5rem 0;
+/* ════════════════════════════════
+   FOOTER
+════════════════════════════════ */
+.footer {
+  text-align: center;
+  color: var(--faint);
+  font-size: .78rem;
+  margin-top: 3.5rem;
+  padding-bottom: 1rem;
+  line-height: 1.9;
 }
+.footer a { color: var(--violet-g); text-decoration: none; }
 
-/* ── Spinner ── */
-[data-testid="stSpinner"] {
-    color: var(--primary-light) !important;
+/* ════════════════════════════════
+   SPINNER
+════════════════════════════════ */
+[data-testid="stSpinner"] p {
+  color: var(--violet-g) !important;
+  font-family: 'Cairo', sans-serif !important;
+  font-size: .95rem !important;
+  direction: rtl;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Hero ──────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# HERO
+# ═══════════════════════════════════════════════════════════════
 st.markdown("""
-<div class="hero">
-    <h1>🚀 DarijaCopy AI</h1>
-    <p>مُساعد الإعلانات بالدارجة</p>
-    <p style="margin-top:.5rem;font-size:.95rem;">
-        كتب إعلانات تسويقية احترافية بالدارجة المغربية في ثوانٍ معدودة 🇲🇦<br>
-        خصص لأصحاب التجارة الإلكترونية والمسوقين المغاربة
-    </p>
+<div class="hero-wrap">
+  <div class="hero-badge">🇲🇦 &nbsp; Powered by Gemini AI</div>
+  <div class="hero-title">🚀 DarijaCopy AI</div>
+  <p class="hero-sub">
+    مُساعد الإعلانات الذكي بالدارجة المغربية<br>
+    دخل بيانات منتجك وتسنى — الذكاء الاصطناعي غادي يكتب ليك إعلانات 
+    احترافية تبيع وتجذب الزبون ف ثوانٍ ✨
+  </p>
+  <div class="hero-stats">
+    <div class="stat-pill">⚡<span>Gemini 2.5 Flash</span></div>
+    <div class="stat-pill">🎯<span>دارجة مغربية 100%</span></div>
+    <div class="stat-pill">✍️<span>2 أساليب إعلانية</span></div>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Form Card ────────────────────────────────────────────────────────────
-st.markdown('<div class="form-card"><h3>✏️ معلومات المنتج</h3>', unsafe_allow_html=True)
+# ═══════════════════════════════════════════════════════════════
+# FORM
+# ═══════════════════════════════════════════════════════════════
+st.markdown('<div class="section-label">✏️ &nbsp; معلومات المنتج</div>', unsafe_allow_html=True)
 
+st.markdown('<div class="input-card">', unsafe_allow_html=True)
 product_name = st.text_input(
-    "اسم المنتج (مثال: عصارة فواكه لاسلكية)",
-    placeholder="أدخل اسم منتجك هنا...",
+    "🏷️ اسم المنتج",
+    placeholder="مثال: عصارة فواكه لاسلكية...",
     key="product_name",
 )
-
-product_features = st.text_area(
-    "مميزات المنتج ومواصفاته (مثال: كتشحن بـ USB، خفيفة، كطحن التلج)",
-    placeholder="اكتب أبرز مميزات ومواصفات منتجك...",
-    height=130,
-    key="product_features",
-)
-
 st.markdown('</div>', unsafe_allow_html=True)
 
-generate_btn = st.button("صاوب الإعلان دابا ✨", key="generate")
+st.markdown('<div class="input-card">', unsafe_allow_html=True)
+product_features = st.text_area(
+    "📋 مميزات ومواصفات المنتج",
+    placeholder="مثال: كتشحن بـ USB، خفيفة 350g، كطحن التلج، ضمان 6 أشهر، توصيل مجاني...",
+    height=120,
+    key="product_features",
+)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Generation Logic ──────────────────────────────────────────────────────────
-if generate_btn:
+# ── Advanced options ──────────────────────────────────────────
+st.markdown('<div class="section-label">🎨 &nbsp; خيارات متقدمة</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+with col1:
+    target_audience = st.selectbox(
+        "🎯 الجمهور المستهدف",
+        ["عام — الجميع", "شباب 18-30", "ربات البيوت", "رجال الأعمال", "المراهقون"],
+        key="audience",
+    )
+with col2:
+    platform = st.selectbox(
+        "📱 منصة النشر",
+        ["فيسبوك / إنستغرام", "واتساب / تيك توك", "إعلان موقع إلكتروني", "رسائل SMS"],
+        key="platform",
+    )
+
+# ── Generate button ───────────────────────────────────────────
+generate = st.button("✨ صاوب الإعلان دابا", key="generate")
+
+# ═══════════════════════════════════════════════════════════════
+# GENERATION
+# ═══════════════════════════════════════════════════════════════
+if generate:
     if not product_name.strip():
-        st.markdown(
-            '<div class="error-card">⚠️ من فضلك دخل اسم المنتج قبل ما تولي!</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="err-card">⚠️ عفاك دخل اسم المنتج قبل المتابعة!</div>', unsafe_allow_html=True)
     elif not product_features.strip():
-        st.markdown(
-            '<div class="error-card">⚠️ من فضلك زيد مميزات المنتج باش يجي الإعلان مزيان!</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="err-card">⚠️ زيد مميزات المنتج باش يكون الإعلان قوي ومؤثر!</div>', unsafe_allow_html=True)
     else:
-        prompt = f"""أنت خبير تسويق إلكتروني مغربي محترف ومختص في كتابة الإعلانات (Copywriter).
-مهمتك هي كتابة 2 نصوص إعلانية احترافية وجذابة لمنتج معين بالدارجة ال��غربية المفهومة والمكتوبة بحروف عربية صحيحة.
+        # ── Pro system prompt ─────────────────────────────────
+        system_prompt = """أنت كاتب إعلانات (Copywriter) مغربي محترف ومتخصص في التسويق الإلكتروني للسوق المغربية.
+أسلوبك: مباشر، مؤثر، ومتجدر في الواقع اليومي للمواطن المغربي.
+قيمك: الصدق في وصف المنتج، الإبداع في الصياغة، والاحترام الكامل للمستهلك.
+لغتك: دارجة مغربية بيضاء مفهومة، مكتوبة بالحروف العربية، بدون تكلف ولا مبالغة."""
 
-معلومات المنتج التي أدخلها المستخدم:
-- اسم المنتج: {product_name}
-- مميزات ومواصفات المنتج: {product_features}
+        user_prompt = f"""اكتب 2 نصوص إعلانية احترافية للمنتج التالي:
 
-شروط صياغة الإعلان الإلزامية:
-1. النص الإعلاني الأول: يجب أن يكون بأسلوب حماسي، سريع، ومباشر يركز على حل مشكلة حقيقية يعاني منها المستهلك.
-2. النص الإعلاني الثاني: يجب أن يكون بأسلوب قصة مشوقة (Storytelling) قريبة من المعيش اليومي للمواطن المغربي.
-3. اللغة: دارجة مغربية بيضاء مفهومة ومؤثرة، مكتوبة بالخط العربي. تجنب العروبية القاسية وتجنب الكلمات الفرنسية.
-4. التنسيق: استخدم علامات الوقف، الإيموجيز المناسبة لجذب الانتباه بصرياً، واقسم النص إلى فقرات قصيرة سهلة القراءة.
-5. طلب اتخاذ إجراء (Call to Action): يجب إنهاء كل إعلان بـ CTA واضح وقوي ومحفز للضغط والشراء الفوري.
+━━━━━━━━━━━━━━━━━━━━━━━━
+📦 اسم المنتج: {product_name}
+📝 المميزات والمواصفات: {product_features}
+🎯 الجمهور المستهدف: {target_audience}
+📱 منصة النشر: {platform}
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-اكتب الإعلانين الآن بشكل احترافي وجذاب:"""
+═══ الشروط الإلزامية للصياغة ═══
 
+【 إعلان 1 — أسلوب Problem → Solution 】
+- ابدأ بمشكلة حقيقية يعيشها الزبون المغربي يومياً تخص هذا المنتج
+- أظهر كيف المنتج يحل هاد المشكلة بشكل ملموس وسريع
+- الأسلوب: حماسي، مباشر، ومقنع
+- استعمل صيغة "واش كنت كتعاني من...؟ — دابا حُلّت!"
+
+【 إعلان 2 — أسلوب Storytelling عاطفي 】
+- ابدأ بقصة قصيرة مشوقة من الحياة اليومية المغربية (قصة شخص حقيقي بسيط)
+- اربط القصة بالمنتج بشكل طبيعي وغير متكلف
+- أثر في مشاعر القارئ (الفرحة، الراحة، الفخر، الاقتصاد...)
+- الأسلوب: سردي، دافئ، وقريب من القلب
+
+═══ قواعد اللغة والتنسيق ═══
+✅ دارجة مغربية مكتوبة بالحروف العربية فقط
+✅ كلمات فرنسية شعبية مقبولة: (لافاج، شارجور، ليفراجو، بروموسيون، كوليزي...)
+✅ إيموجيز استراتيجية لجذب العين بصرياً (مش مبالغة)
+✅ فقرات قصيرة — جملة أو جملتين كحد أقصى لكل فقرة
+✅ انهي كل إعلان بـ CTA قوي ومحفز للشراء الفوري
+✅ ذكر ميزة "الدفع عند الاستلام" و"التوصيل" إن أمكن
+
+═══ تنسيق الإخراج ═══
+استعمل هذا التنسيق بالضبط:
+
+---إعلان 1---
+[محتوى الإعلان الأول]
+
+---إعلان 2---
+[محتوى الإعلان الثاني]
+
+اكتب الإعلانين الآن:"""
+
+        import time
         try:
-            with st.spinner("الذكاء الاصطناعي كيكتب ليك الإعلان..."):
+            with st.spinner("⏳ الذكاء الاصطناعي كيكتب ليك الإعلانات..."):
+                t0 = time.time()
                 response = client.models.generate_content(
                     model=MODEL,
-                    contents=prompt,
+                    contents=[
+                        {"role": "user", "parts": [{"text": system_prompt + "\n\n" + user_prompt}]}
+                    ],
                 )
-                result_text = response.text
+                elapsed = round(time.time() - t0, 1)
+                raw = response.text.strip()
 
-            st.markdown(
-                f"""
-                <div class="output-card">
-                    <div class="output-badge">✅ تم توليد الإعلان بنجاح</div>
-                    <hr class="divider">
-                    {result_text.replace(chr(10), '<br>')}
+            # ── Parse the two ads ─────────────────────────────
+            ads = []
+            if "---إعلان 2---" in raw:
+                parts = raw.split("---إعلان 2---")
+                ad1 = parts[0].replace("---إعلان 1---", "").strip()
+                ad2 = parts[1].strip()
+                ads = [ad1, ad2]
+            else:
+                ads = [raw]
+
+            labels = [
+                ("🔥 إعلان 1", "Problem → Solution"),
+                ("💫 إعلان 2", "Storytelling"),
+            ]
+
+            st.markdown(f"""
+            <div class="out-wrap">
+              <div class="out-header">
+                <div class="out-title">✅ &nbsp; تم توليد الإعلانات بنجاح</div>
+                <div class="out-time">⏱ {elapsed} ثانية</div>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            for i, ad_text in enumerate(ads):
+                icon, style = labels[i] if i < len(labels) else (f"📝 إعلان {i+1}", "")
+                body_escaped = ad_text.replace("<", "&lt;").replace(">", "&gt;")
+                st.markdown(f"""
+                <div class="ad-card">
+                  <div class="ad-num">{icon} &nbsp;·&nbsp; {style}</div>
+                  <div class="ad-body">{body_escaped}</div>
+                  <div class="copy-row">
+                    <button class="copy-btn" onclick="
+                      navigator.clipboard.writeText(document.querySelectorAll('.ad-body')[{i}].innerText);
+                      this.innerText='✅ تم النسخ!';
+                      setTimeout(()=>this.innerText='📋 نسخ الإعلان',1800);
+                    ">📋 نسخ الإعلان</button>
+                  </div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                """, unsafe_allow_html=True)
 
         except Exception as e:
-            err = str(e)
-            if "quota" in err.lower() or "429" in err:
-                msg = "⛔ وصلنا للحد الأقصى ديال الطلبات. جرب مرة أخرى بعد شوية."
-            elif "timeout" in err.lower() or "deadline" in err.lower():
-                msg = "⏱️ الطلب خذ وقت بزاف. شوف الاتصال ديالك وعاود المحاولة."
-            elif "api_key" in err.lower() or "401" in err or "403" in err:
-                msg = "🔑 مشكل في مفتاح API. تواصل مع الدعم التقني."
+            err = str(e).lower()
+            if "quota" in err or "429" in err or "resource_exhausted" in err:
+                msg = "⛔ <strong>تجاوزنا الحد اليومي ديال الطلبات.</strong><br>جرب مرة أخرى بعد شوية أو استعمل مفتاح API آخر."
+            elif "timeout" in err or "deadline" in err or "unavailable" in err:
+                msg = "⏱️ <strong>الطلب خذ وقت بزاف.</strong><br>شوف الاتصال ديالك وعاود المحاولة."
+            elif "api_key" in err or "401" in err or "403" in err or "invalid" in err:
+                msg = "🔑 <strong>مشكل في مفتاح API.</strong><br>تأكد من إضافة المفتاح في Streamlit Secrets."
             else:
-                msg = f"❌ وقع خطأ غير متوقع: {err}"
+                msg = f"❌ <strong>خطأ غير متوقع:</strong><br><code>{str(e)[:200]}</code>"
+            st.markdown(f'<div class="err-card">{msg}</div>', unsafe_allow_html=True)
 
-            st.markdown(
-                f'<div class="error-card">{msg}</div>',
-                unsafe_allow_html=True,
-            )
-
-# ── Footer ─────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# WARNING BANNER
+# ═══════════════════════════════════════════════════════════════
 st.markdown("""
-<div style="text-align:center; color:#4A4A6A; font-size:.8rem; margin-top:3rem; padding-bottom:1rem;">
-    صُنع بـ ❤️ للتجار المغاربة · مدعوم بـ Gemini AI
+<div class="warn-card">
+  💡 <strong>تنبيه مهم:</strong> أي منتج أو موقع يمكن فعله ببساطة فوق الإنترنت غير مربح
+  وليس سوى مضيعة للوقت — الفرص الحقيقية تحتاج جهد، تخطيط، وصبر.
+  استعمل هذه الأداة لمنتجات حقيقية تملكها أو تبيعها بصدق. 🤝
+</div>
+""", unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════
+# FOOTER
+# ═══════════════════════════════════════════════════════════════
+st.markdown("""
+<div class="footer">
+  صُنع بـ ❤️ للتجار المغاربة &nbsp;·&nbsp; مدعوم بـ Gemini 2.5 Flash<br>
+  <span style="color:#3A3A58;">DarijaCopy AI v2.0 — جميع الحقوق محفوظة</span>
 </div>
 """, unsafe_allow_html=True)
